@@ -1,0 +1,1 @@
+db.orders.insertMany([{status:"Pending"},{status:"Pending"},{status:"Completed"}]); db.createView("order_status_counts","orders",[{$group:{_id:"$status",count:{$sum:1}}},{$project:{_id:0,status:"$_id",count:1}}]); db.order_status_counts.find();
