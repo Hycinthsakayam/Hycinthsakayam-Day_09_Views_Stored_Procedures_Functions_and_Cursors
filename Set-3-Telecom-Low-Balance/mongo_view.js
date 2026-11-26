@@ -1,0 +1,1 @@
+db.notification_log.insertMany([{subscriberId:301,isRead:false},{subscriberId:301,isRead:false},{subscriberId:302,isRead:true}]); db.createView("unread_notification_counts","notification_log",[{$match:{isRead:false}},{$group:{_id:"$subscriberId",unreadCount:{$sum:1}}},{$project:{_id:0,subscriberId:"$_id",unreadCount:1}}]); db.unread_notification_counts.find();
