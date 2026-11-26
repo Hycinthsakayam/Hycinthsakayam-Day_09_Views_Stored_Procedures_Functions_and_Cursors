@@ -1,0 +1,8 @@
+IF OBJECT_ID('dbo.OrderFollowUps','U') IS NOT NULL DROP TABLE dbo.OrderFollowUps; IF OBJECT_ID('dbo.OrderLines','U') IS NOT NULL DROP TABLE dbo.OrderLines; IF OBJECT_ID('dbo.Orders','U') IS NOT NULL DROP TABLE dbo.Orders; IF OBJECT_ID('dbo.Products','U') IS NOT NULL DROP TABLE dbo.Products; IF OBJECT_ID('dbo.Customers','U') IS NOT NULL DROP TABLE dbo.Customers;
+CREATE TABLE dbo.Customers(CustomerID int PRIMARY KEY,CustomerName nvarchar(100),Email nvarchar(150));
+CREATE TABLE dbo.Products(ProductID int PRIMARY KEY,ProductName nvarchar(100),UnitPrice decimal(10,2),CostPrice decimal(10,2),Supplier nvarchar(100),Stock int);
+CREATE TABLE dbo.Orders(OrderID int IDENTITY PRIMARY KEY,CustomerID int REFERENCES dbo.Customers,OrderDate date DEFAULT CAST(GETDATE() AS date),Status varchar(20) DEFAULT 'Pending');
+CREATE TABLE dbo.OrderLines(OrderLineID int IDENTITY PRIMARY KEY,OrderID int REFERENCES dbo.Orders,ProductID int REFERENCES dbo.Products,Quantity int,UnitPrice decimal(10,2));
+CREATE TABLE dbo.OrderFollowUps(FollowUpID int IDENTITY PRIMARY KEY,OrderID int REFERENCES dbo.Orders,FollowUpDate datetime2 DEFAULT SYSDATETIME(),Message nvarchar(200));
+INSERT dbo.Customers VALUES(1,'Asha Kumar','asha@example.com'),(2,'Ravi Kumar','ravi@example.com'); INSERT dbo.Products VALUES(101,'Keyboard',850,500,'Supplier A',25),(102,'Mouse',450,250,'Supplier B',8),(103,'Monitor',7500,6200,'Supplier C',4);
+INSERT dbo.Orders(CustomerID,OrderDate,Status) VALUES(1,DATEADD(day,-5,GETDATE()),'Pending'),(2,DATEADD(day,-1,GETDATE()),'Pending'); INSERT dbo.OrderLines(OrderID,ProductID,Quantity,UnitPrice) VALUES(1,101,2,850),(2,102,1,450);
