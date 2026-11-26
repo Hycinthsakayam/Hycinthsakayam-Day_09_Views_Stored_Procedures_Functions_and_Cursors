@@ -1,0 +1,1 @@
+db.customer_communications.insertMany([{customerId:1,complaint:"Delay",resolved:false},{customerId:2,complaint:"Question",resolved:true}]); db.createView("unresolved_complaints","customer_communications",[{$match:{resolved:false}}]); db.unresolved_complaints.find();
