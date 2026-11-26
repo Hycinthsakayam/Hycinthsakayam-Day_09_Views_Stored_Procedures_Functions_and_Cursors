@@ -1,0 +1,5 @@
+CREATE OR ALTER PROCEDURE dbo.usp_FollowUpOldOrders_Cursor AS BEGIN SET NOCOUNT ON; DECLARE @ID int; DECLARE c CURSOR LOCAL FAST_FORWARD FOR SELECT OrderID FROM dbo.Orders WHERE Status='Pending' AND OrderDate<DATEADD(day,-3,CAST(GETDATE() AS date)); OPEN c; FETCH NEXT FROM c INTO @ID; WHILE @@FETCH_STATUS=0 BEGIN INSERT dbo.OrderFollowUps(OrderID,Message) VALUES(@ID,'Pending over three days: follow up.'); FETCH NEXT FROM c INTO @ID; END CLOSE c; DEALLOCATE c; END;
+GO
+EXEC dbo.usp_FollowUpOldOrders_Cursor;
+INSERT dbo.OrderFollowUps(OrderID,Message) SELECT o.OrderID,'Pending over three days: follow up.' FROM dbo.Orders o WHERE o.Status='Pending' AND o.OrderDate<DATEADD(day,-3,CAST(GETDATE() AS date)) AND NOT EXISTS(SELECT 1 FROM dbo.OrderFollowUps f WHERE f.OrderID=o.OrderID);
+SELECT * FROM dbo.OrderFollowUps;
