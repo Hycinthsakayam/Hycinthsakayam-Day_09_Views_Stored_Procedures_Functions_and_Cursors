@@ -1,0 +1,2 @@
+# Insurance notes
+The due view shows customer/policy renewal fields without claim data. Renewal validation requires Active policy and no pending claim; it applies a sample no-claim discount (1 year 10%, 3 years 15%, 5+ years 20%), advances the due date and writes an audit entry transactionally. These discount percentages are illustrative only. Cursor updates/logs individual lapsed records; UPDATE...OUTPUT logs the set of changes in one statement. MongoDB's unresolved-complaint view filters communication documents via aggregation.
