@@ -1,0 +1,7 @@
+CREATE OR ALTER FUNCTION dbo.fn_PremiumWithNoClaimDiscount(@Premium decimal(10,2),@Years int) RETURNS decimal(10,2) AS BEGIN DECLARE @D decimal(5,2)=CASE WHEN @Years>=5 THEN .20 WHEN @Years>=3 THEN .15 WHEN @Years>=1 THEN .10 ELSE 0 END; RETURN @Premium*(1-@D); END;
+GO
+CREATE OR ALTER FUNCTION dbo.fn_AgentRenewalQuotes(@Agent int) RETURNS TABLE AS RETURN SELECT PolicyID,CustomerID,DueDate,BasePremium,NoClaimYears,dbo.fn_PremiumWithNoClaimDiscount(BasePremium,NoClaimYears) Quote FROM dbo.Policies WHERE AgentID=@Agent AND Status='Active';
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_RenewPolicy @PolicyID int AS BEGIN SET NOCOUNT ON; SET XACT_ABORT ON; BEGIN TRY BEGIN TRAN; DECLARE @P decimal(10,2),@Y int,@S varchar(20); SELECT @P=BasePremium,@Y=NoClaimYears,@S=Status FROM dbo.Policies WITH(UPDLOCK,HOLDLOCK) WHERE PolicyID=@PolicyID; IF @S IS NULL THROW 50101,'Policy not found.',1; IF @S<>'Active' THROW 50102,'Policy not active.',1; IF EXISTS(SELECT 1 FROM dbo.Claims WHERE PolicyID=@PolicyID AND ClaimStatus='Pending') THROW 50103,'Pending claim prevents renewal.',1; SET @P=dbo.fn_PremiumWithNoClaimDiscount(@P,@Y); UPDATE dbo.Policies SET DueDate=DATEADD(year,1,DueDate),BasePremium=@P WHERE PolicyID=@PolicyID; INSERT dbo.PolicyAudit(PolicyID,ActionName,Premium) VALUES(@PolicyID,'Renewed',@P); COMMIT; SELECT @PolicyID PolicyID,@P Premium; END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK; THROW; END CATCH END;
+GO
+SELECT * FROM dbo.fn_AgentRenewalQuotes(11); EXEC dbo.usp_RenewPolicy 201; -- Policy 202 test should fail due to pending claim
