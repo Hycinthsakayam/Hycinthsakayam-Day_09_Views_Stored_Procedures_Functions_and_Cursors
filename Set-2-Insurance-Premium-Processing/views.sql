@@ -1,0 +1,1 @@
+CREATE OR ALTER VIEW dbo.vw_policy_due AS SELECT p.PolicyID,p.CustomerID,c.CustomerName,c.Email,p.AgentID,p.DueDate,p.BasePremium,p.Status,p.NoClaimYears FROM dbo.Policies p JOIN dbo.PolicyCustomers c ON c.CustomerID=p.CustomerID WHERE p.DueDate BETWEEN CAST(GETDATE() AS date) AND DATEADD(day,30,CAST(GETDATE() AS date)); GO SELECT * FROM dbo.vw_policy_due;
