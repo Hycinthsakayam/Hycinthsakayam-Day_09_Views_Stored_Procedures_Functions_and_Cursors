@@ -1,0 +1,4 @@
+CREATE OR ALTER PROCEDURE dbo.usp_LowBalanceNotifications_Cursor AS BEGIN SET NOCOUNT ON; DECLARE @ID int; DECLARE c CURSOR LOCAL FAST_FORWARD FOR SELECT SubscriberID FROM dbo.Subscribers WHERE SubscriberType='Prepaid' AND Balance<50; OPEN c; FETCH NEXT FROM c INTO @ID; WHILE @@FETCH_STATUS=0 BEGIN INSERT dbo.NotificationLog(SubscriberID,Message) VALUES(@ID,'Balance below 50: please recharge.'); FETCH NEXT FROM c INTO @ID; END CLOSE c; DEALLOCATE c; END;
+GO
+-- Cursor and set-based runs should be timed separately and on the same data. This insert is set-based:
+SET STATISTICS TIME ON; INSERT dbo.NotificationLog(SubscriberID,Message) SELECT SubscriberID,'Balance below 50: please recharge.' FROM dbo.Subscribers WHERE SubscriberType='Prepaid' AND Balance<50; SET STATISTICS TIME OFF; SELECT * FROM dbo.NotificationLog;
