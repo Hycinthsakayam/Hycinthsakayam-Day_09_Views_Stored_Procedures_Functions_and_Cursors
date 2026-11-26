@@ -1,0 +1,4 @@
+CREATE OR ALTER PROCEDURE dbo.usp_LapsePolicies_Cursor AS BEGIN SET NOCOUNT ON; DECLARE @ID int; DECLARE c CURSOR LOCAL FAST_FORWARD FOR SELECT PolicyID FROM dbo.Policies WHERE DueDate<CAST(GETDATE() AS date) AND Status='Active'; OPEN c; FETCH NEXT FROM c INTO @ID; WHILE @@FETCH_STATUS=0 BEGIN UPDATE dbo.Policies SET Status='Lapsed' WHERE PolicyID=@ID AND Status='Active'; IF @@ROWCOUNT=1 INSERT dbo.PolicyAudit(PolicyID,ActionName,Premium) SELECT @ID,'Lapsed',BasePremium FROM dbo.Policies WHERE PolicyID=@ID; FETCH NEXT FROM c INTO @ID; END CLOSE c; DEALLOCATE c; END;
+GO
+-- Set-based equivalent; choose one method per run to avoid processing the same policies twice.
+UPDATE dbo.Policies SET Status='Lapsed' OUTPUT inserted.PolicyID,'Lapsed',inserted.BasePremium INTO dbo.PolicyAudit(PolicyID,ActionName,Premium) WHERE DueDate<CAST(GETDATE() AS date) AND Status='Active'; SELECT * FROM dbo.PolicyAudit;
